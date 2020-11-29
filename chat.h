@@ -46,16 +46,52 @@ typedef struct __Chat Chat;
 vector<User> Users;
 vector<Chat> Chats;
 
+//유저의 정보를 갱신하는 함수
+// 텍스트파일 -> 클라이언트
 void download();
+// 클라이언트 -> 텍스트파일
 void upload();
+
+// 시작메뉴화면
 void startMenu();
+// 로그인 화면
 void signUp();
+// 회원가입 화면
 void signIn();
+
+/*
+>> Main menu
+
+*/
+// 메인 메뉴 화면
 void mainMenu();
+
+// 다른 사람들 상태메세지 출력
 void seeStatus();
+// 내 상태메세지 바꾸기
 void changeStatus();
+
+
+// Send new chats
+void sendChat();
+
+//Show all chat rooms.
+/*
+>> Chat Lists :
+0. back
+1. with <name1>
+2. with <name2>
+3. with <name3>, <name4>, <name5>
+
+>> select number
+<<
+*/
 void chatList();
+
+// Show all messages which is sent or receieved in time order.
 void chatting();
+
+// Exit with display "Good-bye"
 void out();
 
-#endif __CHAT_H__
+#endif //__CHAT_H__

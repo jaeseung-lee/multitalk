@@ -100,3 +100,7 @@ void download(void) {
     }
     close(fd);
 }
+
+void mainMenu(){
+
+}
