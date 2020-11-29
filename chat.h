@@ -61,7 +61,8 @@ void signIn();
 
 /*
 >> Main menu
-
+0. Exit
+1.
 */
 // 메인 메뉴 화면
 void mainMenu();
@@ -73,6 +74,10 @@ void changeStatus();
 
 
 // Send new chats
+/*
+>> Chatting
+2020-10-17 21:37:00 <name1> >> h
+*/
 void sendChat();
 
 //Show all chat rooms.
