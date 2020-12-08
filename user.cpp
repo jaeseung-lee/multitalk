@@ -101,6 +101,40 @@ void download(void) {
     close(fd);
 }
 
-void mainMenu(){
+void chatOut(){
+    int fd;
+    fd=open("/tmp/chats.txt",O_RDONLY);
+    if(fd==-1){
+        perror("open error!");
+        exit(-1);
+    }
+
+    //chat vector를 클리어해주고, 다시 전부 담는다.
+    Chats.clear();
+
+    Chat temp_chat;
+    memset(temp_chat.send,0x00,MAX_NAME_LENGTH);
+    memset(temp_chat.chatting,0x00,MAX_CHAT_LENGTH);
+    temp_chat.receive.clear();
+    memset(temp_chat.time,0x00,MAX_NAME_LENGTH);
+
+    size_t r_size=0;
+    while(1){
+        r_size=read(fd,(Chat*)&temp_chat,sizeof(temp_chat));
+        if(r_size==-1)
+            break;
+
+        Chats.push_back(temp_chat);
+    }
+
+}
+
+void chatIn(){
+    int fd;
+    fd=open("/tmp/chats.txt",O_CREAT|O_APPEND|O_WRONLY, PERMS);
+    if(fd==-1){
+        perror("open error!");
+        exit(-1);
+    }
 
 }

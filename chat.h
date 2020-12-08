@@ -39,7 +39,7 @@ struct __Chat {
     char send[MAX_NAME_LENGTH + 1];
     vector<char[MAX_NAME_LENGTH + 1]> receive;
     char chatting[MAX_CHAT_LENGTH + 1];
-    int time;
+    char time[MAX_NAME_LENGTH+1];
 };
 
 typedef struct __Chat Chat;
@@ -98,5 +98,11 @@ void chatting();
 
 // Exit with display "Good-bye"
 void out();
+
+// 채팅 로그 받기
+void chatIn();
+
+// 채팅 로그 넣기
+void chatOut();
 
 #endif //__CHAT_H__
