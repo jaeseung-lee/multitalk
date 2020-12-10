@@ -230,3 +230,61 @@ void out(){
     upload();
     chatIn();
 }
+
+void chatList() {
+    while (1) {
+        //기능 출력
+        int number;
+        cout << ">> Chat Lists : " << endl;
+        cout << "-1. exit" << endl;
+        cout << "0. back" << endl;
+        cout << "1. Make new Chat room" << endl;
+        
+        //톡방 이름txt 파일을 읽어서 갯수에 맞게 출력
+        ifstream chatName;
+        char line[100];
+        int num = 2;
+        chatName.open("chatList.txt");
+        if (chatName.is_open()) {
+            while (chatName.getline(line, sizeof(line))) {
+                cout << num << ". " << line << endl;
+                num++;
+            }
+        }
+
+        cout << " " << endl;
+        cout << ">> select number" << endl;
+        cout << "<< ";
+        cin >> number;
+        
+        //연결 필요한 부분
+        if (number == 0) {
+            cout << "return to back" << endl;
+            system("clear");
+        } else if (number == 1) {
+            chatMake();
+            system("clear");
+        } else if (number == -1) {
+            break;
+            system("clear");
+        }
+    }
+}
+
+void chatMake() {
+    //톡방 이름 받기
+    char ch[100];
+    cout << ">> Please put .txt (ex: memo.txt)" << endl;
+    cout << "<< ";
+    cin >> ch;
+
+    ofstream ofs(ch);
+    // ofs << 내용입력
+    ofs.close();
+
+    //톡방 이름 txt 따로 저장
+    ofstream ofs2("chatList.txt", ios::app);
+    ofs2.write(ch, strlen(ch));
+    ofs2.put('\n');
+    ofs2.close();
+}

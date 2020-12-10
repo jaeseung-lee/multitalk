@@ -101,6 +101,8 @@ void sendChat();
 */
 void chatList();
 
+void chatMake();
+
 // Show all messages which is sent or receieved in time order.
 void chatting();
 
