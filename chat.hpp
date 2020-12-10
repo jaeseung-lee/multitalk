@@ -1,15 +1,15 @@
-#ifndef __CHAT_H__
-#define __CHAT_H__
+#ifndef __CHAT_HPP__
+#define __CHAT_HPP__
 
 #include <iostream>
 #include <stdlib.h>
-#include <string.h>
 #include <string>
 #include <time.h>
 #include <vector>
 #define MAX_NAME_LENGTH 32
 #define MAX_STATUS_LENGTH 256
 #define MAX_CHAT_LENGTH 256
+
 using namespace std;
 /*
   User 이름;
@@ -18,6 +18,7 @@ using namespace std;
       상태메세지
     }
 */
+
 class User {
   public:
     User();
@@ -35,16 +36,23 @@ class User {
     char status[MAX_STATUS_LENGTH + 1];
 };
 
-struct __Chat {
-    char send[MAX_NAME_LENGTH + 1];
-    vector<char[MAX_NAME_LENGTH + 1]> receive;
-    char chatting[MAX_CHAT_LENGTH + 1];
+class Chat{
+  public:
+    Chat();
+    Chat(string newSend,vector<string> newReceive,string newChatting,string newTime);
+    string getSend();
+    vector<string> getReceive();
+    string getChatting();
+    string getTime();
+
+   private:
+    char send[MAX_NAME_LENGTH+1];
+    vector<string> receive;
+    char chatting[MAX_CHAT_LENGTH+1];
     char time[MAX_NAME_LENGTH+1];
 };
 
-typedef struct __Chat Chat;
-vector<User> Users;
-vector<Chat> Chats;
+
 
 //유저의 정보를 갱신하는 함수
 // 텍스트파일 -> 클라이언트
