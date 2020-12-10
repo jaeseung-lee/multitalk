@@ -8,6 +8,9 @@
 #include <unistd.h>
 #include <vector>
 #include <string.h>
+#include <signal.h>
+
+#define PERMS 0664
 
 using namespace std;
 typedef struct {
@@ -23,12 +26,20 @@ struct _chat{
 };
 typedef struct _chat __chat;
 
-#define PERMS 0664
-
 vector<User> Users;
 vector<Chat> Chats;
+
+// 현재까지 받은 채팅 로그의 수
 int chatSize=0;
 
+// When Ctrl+C is inserted,
+void signalHandler(int signum){
+    if(signum==SIGINT){
+        upload();
+        chatOut();
+        exit(0);
+    }
+}
 
 User::User() {
     memset(this->name, 0x00, MAX_NAME_LENGTH + 1);
@@ -185,13 +196,13 @@ void chatOut() {
 
         Chats.push_back(Chat((string)temp_chat.send,temp_chat.receive,(string)temp_chat.chatting,(string)temp_chat.time));
     }
+
+    // 현재 어디까지 chatting을 불러왔는지 체크해주는 변수
     chatSize=Chats.size();
 }
 
 void chatIn() {
     int fd;
-    //파일을 지우고 새로 다시 다 담으려고했으나 permission denied로 주석처리
-    //remove("tmp/chats.txt");
     fd = open("/tmp/chats.txt", O_CREAT | O_APPEND | O_WRONLY, PERMS);
     if (fd == -1) {
         perror("open error!");
@@ -212,4 +223,10 @@ void chatIn() {
             exit(-1);
         }
     }
+}
+
+void out(){
+    cout << "Good-bye!" << endl;
+    upload();
+    chatIn();
 }
