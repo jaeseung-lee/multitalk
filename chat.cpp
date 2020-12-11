@@ -9,6 +9,7 @@
 #include <vector>
 #include <string.h>
 #include <signal.h>
+#include <fstream>
 
 #define PERMS 0664
 
@@ -239,7 +240,7 @@ void chatList() {
         cout << "-1. exit" << endl;
         cout << "0. back" << endl;
         cout << "1. Make new Chat room" << endl;
-        
+
         //톡방 이름txt 파일을 읽어서 갯수에 맞게 출력
         ifstream chatName;
         char line[100];
@@ -256,7 +257,7 @@ void chatList() {
         cout << ">> select number" << endl;
         cout << "<< ";
         cin >> number;
-        
+
         //연결 필요한 부분
         if (number == 0) {
             cout << "return to back" << endl;
@@ -266,7 +267,7 @@ void chatList() {
             system("clear");
         } else if (number == -1) {
             break;
-            system("clear");
+            chatOut();
         }
     }
 }
