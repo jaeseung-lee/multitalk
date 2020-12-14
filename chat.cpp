@@ -344,8 +344,8 @@ void chatMake() {
 
 void signUp() {
     int num = 0;
-    string id = "";
-    string pw = "";
+    string id1 = "";
+    string pw1 = "";
     Person* pr;
     list<Person> user;
     list<Person> newuser;
@@ -362,20 +362,23 @@ void signUp() {
             cout << "error!" << endl;
             exit(-1);
         }
-        id = pr->getId();
-        pw = pr->getPw();
-        Person info(id, pw);
+        id1 = pr->getId();
+        pw1 = pr->getPw();
+        Person info(id1, pw1);
         user.push_back(info);
         num++;
     }
 
+    string id = "";
+    string pw = "";
     if (num = 0) {
         cout << "ID (input) : ";
         cin >> id;
         cout << "PW (input) : ";
         cin >> pw;
-        Person nuser(id, pw);
-        newuser.push_back(nuser);
+        Person nuser1(id, pw);
+        newuser.push_back(nuser1);
+
         list<Person>::iterator iter;
         for (iter = newuser.begin(); iter != newuser.end(); ++iter) {
             if (write(fd, &(*iter), sizeof(Person)) == -1) {
@@ -384,7 +387,7 @@ void signUp() {
             }
         }
         close(fd);
-        cout << "***Succes Sign Up!***";
+        cout << "***회원가입 성공!***";
 
         return;
     }
@@ -392,22 +395,25 @@ void signUp() {
         int count = 1;
         while (count % 2 == 1) {
             int tmp = 1;
+            string id2 = "";
+            string pw2 = "";
+
             cout << "ID (input) : ";
-            cin >> id;
+            cin >> id2;
             cout << "PW (input) : ";
-            cin >> pw;
+            cin >> pw2;
 
             list<Person>::iterator itr;
             for (itr = user.begin(); itr != user.end(); ++itr) {
-                if (id == itr->getId()) {
+                if (id2 == itr->getId()) {
                     cout << "***ID 중복! 다시 입력해주세요!***" << endl;
                     tmp = 2;
                 }
             }
 
             if (tmp == 1) {
-                Person nuser(id, pw);
-                newuser.push_back(nuser);
+                Person nuser2(id2, pw2);
+                newuser.push_back(nuser2);
                 list<Person>::iterator itr2;
                 for (itr2 = newuser.begin(); itr2 != newuser.end(); ++itr2) {
                     if (write(fd, &(*itr2), sizeof(Person)) == -1) {
@@ -416,11 +422,71 @@ void signUp() {
                     }
                 }
                 close(fd);
-                cout << "***Succes Sign Up!***";
+                cout << "***회원가입 성공!***";
                 count = 2;
             }
         }
 
         return;
     }
+
+}
+
+void signIn() {
+    cout << "***로그인***" << endl;
+    int tmp = 0;
+    string id1 = "";
+    string pw1 = "";
+    Person* pr;
+    list<Person> user;
+    list<Person> loguser;
+
+    int fd = open("./logList.dat", O_CREAT | O_APPEND | O_RDWR, PERMS);
+    if (fd == -1) {
+        cout << "open() error!" << endl;
+        exit(-1);
+    }
+
+    ssize_t rSize = 0;
+    while (rSize = read(fd, (Person*)pr, sizeof(Person))) {
+        if (rSize == -1) {
+            cout << "error!" << endl;
+            exit(-1);
+        }
+
+        id1 = pr->getId();
+        pw1 = pr->getPw();
+        Person info(id1, pw1);
+        user.push_back(info);
+    }
+
+    while (tmp == 0) {
+        string id2 = "";
+        string pw2 = "";
+        cout << "ID : ";
+        cin >> id2;
+        cout << "PW : ";
+        cin >> pw2;
+
+        list<Person>::iterator itr;
+        for (itr = user.begin(); itr != user.end(); ++itr) {
+            if (id2 == itr->getId()) {
+                if (pw2 == itr->getPw()) {
+                    tmp = 1;
+                }
+            }
+        }
+
+        if (tmp == 0) {
+            cout << "***ID 혹은 PW 가 정확하지 않습니다!***" << endl;
+        }
+    }
+
+    if (tmp == 1) {
+        cout << "***로그인 성공!***" << endl;
+
+        return;
+        //여기서 시작메뉴창으로 넘어가야함
+    }
+
 }
