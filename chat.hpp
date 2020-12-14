@@ -62,9 +62,9 @@ void upload();
 
 // 시작메뉴화면
 void startMenu();
-// 로그인 화면
-void signUp();
 // 회원가입 화면
+void signUp();
+// 로그인 화면
 void signIn();
 
 /*
