@@ -243,15 +243,29 @@ void chatList() {
 
         //톡방 이름txt 파일을 읽어서 갯수에 맞게 출력
         ifstream chatName;
+        string chatUserName;
+
+        char selectedChat[100];
         char line[100];
         int num = 2;
         chatName.open("chatList.txt");
         if (chatName.is_open()) {
             while (chatName.getline(line, sizeof(line))) {
-                cout << num << ". " << line << endl;
+                cout << num << ". "
+                     << "Chat Name: " << line << endl;
+                cout << "   Chat Member: ";
+                ifstream in(line);
+                while (getline(in, chatUserName)) {
+                    if (strcmp(chatUserName.c_str(), "END") == 0) {
+                        break;
+                    }
+                    cout << chatUserName << " ";
+                }
+                cout << endl;
                 num++;
             }
         }
+        chatName.close();
 
         cout << " " << endl;
         cout << ">> select number" << endl;
@@ -267,7 +281,17 @@ void chatList() {
             system("clear");
         } else if (number == -1) {
             break;
-            chatOut();
+            exit(-1);
+        } else {
+            cout << ">> Write the name of chat room which you want to "
+                    "join(include .txt)"
+                 << endl;
+            cout << "<< ";
+            cin >> selectedChat;
+            ofstream ofs2(selectedChat, ios::app);
+            ofs2 << "CHATTING" << endl;
+            ofs2.close();
+            exit(-1);
         }
     }
 }
@@ -275,12 +299,29 @@ void chatList() {
 void chatMake() {
     //톡방 이름 받기
     char ch[100];
-    cout << ">> Please put .txt (ex: memo.txt)" << endl;
+    char us[100];
+    cout << ">> Please put Chat room name + .txt (ex: memo.txt)" << endl;
     cout << "<< ";
     cin >> ch;
 
     ofstream ofs(ch);
-    // ofs << 내용입력
+
+    cout << endl << ">> ( User List )" << endl;
+    for (int i = 0; i < Users.size(); i++)
+        cout << i + 1 << ". " << Users[i].getName() << endl;
+    cout << ">> Please write users you want to invite: " << endl;
+    cout << "   (Write 0 to finish)" << endl;
+    while (1) {
+        cin >> us;
+        if (strcmp(us, "0") == 0) {
+            break;
+        } else {
+            ofs << us << endl;
+        }
+    }
+    ofs << "END" << endl;
+    ofs << "<Chat room member>" << endl;
+    ofs << "-----------------" << endl;
     ofs.close();
 
     //톡방 이름 txt 따로 저장
