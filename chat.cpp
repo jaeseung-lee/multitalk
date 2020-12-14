@@ -289,3 +289,39 @@ void chatMake() {
     ofs2.put('\n');
     ofs2.close();
 }
+
+
+
+void seeStatus() {
+	int fd;
+	fd = open("/tmp/chattings.dat", O_CREAT | O_APPEND | O_RDWR, PERMS);
+	if (fd == -1) {
+		cout << "open() error!" << endl;
+		exit(-1);
+	}
+
+	ssize_t rsize = 0;
+	while (1) {
+		Userinfo *userinfo = new Userinfo;
+		memset(userinfo->name, 0x00, MAX_NAME_LENGTH);
+		memset(userinfo->status, 0x00, MAX_NAME_LENGTH);
+		if (rsize = read(fd, (Userinfo *)userinfo, sizeof(Userinfo)) == -1) {
+			cout << "download error! " << endl;
+			exit(-1);
+		}
+		else if (rsize == 0) {
+			break;
+		}
+		else {
+			vector<User>::iterator it;
+			for (it = Users.begin(); it != Users.end(); it++) {
+				cout << userinfo->name;
+				cout << "\t <[ " << userinfo->status << " ]" << endl;
+				cout << endl << "---------------------------------" << endl;
+			}
+		}
+		delete userinfo;
+	}
+
+	close(fd);
+}
