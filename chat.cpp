@@ -1,4 +1,6 @@
 #include "chat.hpp"
+#include "login.hpp" //추가
+#include <list> //추가
 #include <iostream>
 #include <string>
 #include <fcntl.h>
@@ -338,4 +340,87 @@ void chatMake() {
     ofs2.write(ch, strlen(ch));
     ofs2.put('\n');
     ofs2.close();
+}
+
+void signUp() {
+    int num = 0;
+    string id = "";
+    string pw = "";
+    Person* pr;
+    list<Person> user;
+    list<Person> newuser;
+
+    int fd = open("./logList.dat", O_CREAT | O_APPEND | O_RDWR, PERMS);
+    if (fd == -1) {
+        cout << "open() error!" << endl;
+        exit(-1);
+    }
+
+    ssize_t rSize = 0;
+    while (rSize = read(fd, (Person*)pr, sizeof(Person))) {
+        if (rSize == -1) {
+            cout << "error!" << endl;
+            exit(-1);
+        }
+        id = pr->getId();
+        pw = pr->getPw();
+        Person info(id, pw);
+        user.push_back(info);
+        num++;
+    }
+
+    if (num = 0) {
+        cout << "ID (input) : ";
+        cin >> id;
+        cout << "PW (input) : ";
+        cin >> pw;
+        Person nuser(id, pw);
+        newuser.push_back(nuser);
+        list<Person>::iterator iter;
+        for (iter = newuser.begin(); iter != newuser.end(); ++iter) {
+            if (write(fd, &(*iter), sizeof(Person)) == -1) {
+                cout << "write error!" << endl;
+                exit(-1);
+            }
+        }
+        close(fd);
+        cout << "***Succes Sign Up!***";
+
+        return;
+    }
+    else if (num > 0) {
+        int count = 1;
+        while (count % 2 == 1) {
+            int tmp = 1;
+            cout << "ID (input) : ";
+            cin >> id;
+            cout << "PW (input) : ";
+            cin >> pw;
+
+            list<Person>::iterator itr;
+            for (itr = user.begin(); itr != user.end(); ++itr) {
+                if (id == itr->getId()) {
+                    cout << "***ID 중복! 다시 입력해주세요!***" << endl;
+                    tmp = 2;
+                }
+            }
+
+            if (tmp == 1) {
+                Person nuser(id, pw);
+                newuser.push_back(nuser);
+                list<Person>::iterator itr2;
+                for (itr2 = newuser.begin(); itr2 != newuser.end(); ++itr2) {
+                    if (write(fd, &(*itr2), sizeof(Person)) == -1) {
+                        cout << "write error!" << endl;
+                        exit(-1);
+                    }
+                }
+                close(fd);
+                cout << "***Succes Sign Up!***";
+                count = 2;
+            }
+        }
+
+        return;
+    }
 }
