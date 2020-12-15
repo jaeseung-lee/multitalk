@@ -298,6 +298,10 @@ void chatList() {
     }
 }
 
+void chatting() {
+
+}
+
 void chatMake() {
     //톡방 이름 받기
     char ch[100];
@@ -309,8 +313,13 @@ void chatMake() {
     ofstream ofs(ch);
     //벡터 컨테이너에 담긴 겍체에 접근하여 유저 리스트 먼저 보여줌
     cout << endl << ">> ( User List )" << endl;
-    for (int i = 0; i < Users.size(); i++)
-        cout << i + 1 << ". " << Users[i].getName() << endl;
+    int count =1;
+    for (int i = 0; i < Users.size(); i++){
+        if(me!=i){
+            cout << count << ". " << Users[i].getName() << endl;
+            count++;
+        }
+    }
     //초대할 유저 고르는 파트, 0을 누르면 초대 종료
     cout << ">> Please write users you want to invite: " << endl;
     cout << "   (Write 0 to finish)" << endl;
@@ -431,7 +440,11 @@ void startMenu(){
 }
 
 void mainMenu(){
+    cout << endl;
+    cout << Users[me].getName() << " 님, 안녕하세요!" << endl;
+
     while(1){
+        cout << endl;
         cout << "****메인 메뉴****" << endl;
         cout << "0. 종료" << endl;
         cout << "1. 상태메세지 보기" << endl;
