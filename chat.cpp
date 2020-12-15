@@ -171,7 +171,16 @@ vector<string> Chat::getReceive(){return receive;}
 string Chat::getChatting(){return string(this->chatting);}
 string Chat::getTime(){return string(this->time);}
 
+ChatRoom::ChatRoom(){
+    memcpy(this->roomName,"이름 없음",MAX_NAME_LENGTH);
+    members.clear();
+}
 
+ChatRoom::ChatRoom(string newRoomName,vector<string> newMembers){
+    memcpy(this->roomName,newRoomName.c_str(),MAX_NAME_LENGTH);
+    members.clear();
+    members.assign(newMembers.begin(),newMembers.end());
+}
 
 void chatOut() {
     int fd;
@@ -225,6 +234,7 @@ void chatIn() {
 void out(){
     cout << "Good-bye!" << endl;
     upload();
+    exit(-1);
 }
 
 void chatList() {
@@ -273,13 +283,12 @@ void chatList() {
         //입력 받은 번호에 따라 선택지 갈림
         if (number == 0) {
             cout << "return to back" << endl;
-            system("clear");
+            mainMenu();
+            return;
         } else if (number == 1) {
             chatMake();
-            system("clear");
         } else if (number == -1) {
-            break;
-            exit(-1);
+            out();
         //0과1과-1을 입력하지 않았다면 톡방으로 들어 가는걸로 간주
         } else {
             //들어갈 톡방 이름을 입력 받음
@@ -402,7 +411,9 @@ void signIn() {
         for (itr = Users.begin(); itr != Users.end(); ++itr) {
             if (id2 == (*itr).getName() && pw2==(*itr).getPW()) {
                 tmp = 1;
+                break;
             }
+            count++;
         }
 
         if (tmp == 0) {
