@@ -56,6 +56,14 @@ class Chat{
     char time[MAX_NAME_LENGTH+1];
 };
 
+class ChatRoom{
+  public:
+    ChatRoom();
+    ChatRoom(string newRoomName,vector<string> newMembers);
+  private:
+    char roomName[MAX_NAME_LENGTH+1];
+    vector<string> members;
+};
 
 
 //유저의 정보를 갱신하는 함수
