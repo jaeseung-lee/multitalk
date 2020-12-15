@@ -22,17 +22,21 @@ typedef struct {
 
 struct _chat{
     char send[MAX_NAME_LENGTH+1];
-    vector<string> receive;
+    char receive[MAX_MEMBER][MAX_NAME_LENGTH+1];
     char chatting[MAX_CHAT_LENGTH+1];
     char time[MAX_NAME_LENGTH+1];
 };
 typedef struct _chat __chat;
 
+struct _room{
+    char roomName[MAX_NAME_LENGTH+1];
+    char members[MAX_MEMBER][MAX_NAME_LENGTH+1];
+};
+typedef struct _room __room;
+
 vector<User> Users;
 vector<Chat> Chats;
-
-// 현재까지 받은 채팅 로그의 수
-int chatSize=0;
+vector<ChatRoom> Rooms;
 
 // When Ctrl+C is inserted,
 void signalHandler(int signum){
@@ -89,12 +93,8 @@ void upload(void) {
     }
 
     ssize_t wsize = 0;
-    //유저 정보가 담겨있는 벡터를 텍스트 파일에 갱신
-    //만약 이미 유저의 이름이 텍스트파일에 있다면 상태메세지만 갱신해주고
-    //유저의 이름이 없다면 생성해준다.
+
     for (int i=0; i<Users.size(); i++) {
-        ssize_t rsize = 0;
-        //유저 정보를 담을 구조체를 초기화시켜준다.
         Userinfo *userinfo = new Userinfo;
         memcpy(userinfo->name, Users[i].getName().c_str(), MAX_NAME_LENGTH);
         memcpy(userinfo->password, Users[i].getPW().c_str(), MAX_NAME_LENGTH);
@@ -154,37 +154,65 @@ Chat::Chat(){
     memset(this->send,0x00,MAX_NAME_LENGTH);
     memset(this->chatting,0x00,MAX_CHAT_LENGTH);
     memset(this->time,0x00,MAX_NAME_LENGTH);
-    receive.clear();
+    memset(this->receive,0x00,MAX_BUFFER);
 }
 
 Chat::Chat(string newSend,vector<string> newReceive,string newChatting,string newTime){
     memcpy(this->send,newSend.c_str(),MAX_NAME_LENGTH);
-    receive.clear();
-    receive.assign(newReceive.begin(),newReceive.end());
     memcpy(this->chatting,newChatting.c_str(),MAX_CHAT_LENGTH);
     memcpy(this->time,newTime.c_str(),MAX_NAME_LENGTH);
+    for(int i=0;i<newReceive.size();i++){
+        memcpy(this->receive[i],newReceive[i].c_str(),MAX_NAME_LENGTH);
+    }
+}
+
+Chat::Chat(string newSend,char newReceive[MAX_MEMBER][MAX_NAME_LENGTH+1],string newChatting, string newTime){
+    memcpy(this->send,newSend.c_str(),MAX_NAME_LENGTH);
+    memcpy(this->chatting,newChatting.c_str(),MAX_CHAT_LENGTH);
+    memcpy(this->time,newTime.c_str(),MAX_NAME_LENGTH);
+    memcpy(this->receive,newReceive,MAX_BUFFER);
 }
 
 string Chat::getSend(){return string(this->send);}
 
-vector<string> Chat::getReceive(){return receive;}
+vector<string> Chat::getReceive(){
+    vector<string> result;
+    for(int i=0;i<MAX_MEMBER;i++){
+        result.push_back(string(receive[i]));
+    }
+    return result;
+}
 string Chat::getChatting(){return string(this->chatting);}
 string Chat::getTime(){return string(this->time);}
 
 ChatRoom::ChatRoom(){
     memcpy(this->roomName,"이름 없음",MAX_NAME_LENGTH);
-    members.clear();
 }
 
 ChatRoom::ChatRoom(string newRoomName,vector<string> newMembers){
     memcpy(this->roomName,newRoomName.c_str(),MAX_NAME_LENGTH);
-    members.clear();
-    members.assign(newMembers.begin(),newMembers.end());
+    for(int i=0;i<newMembers.size();i++){
+        memcpy(this->members[i],newMembers[i].c_str(),MAX_NAME_LENGTH);
+    }
 }
+ChatRoom::ChatRoom(string newRoomName,char newMembers[MAX_MEMBER][MAX_NAME_LENGTH+1]){
+    memcpy(this->roomName,newRoomName.c_str(),MAX_NAME_LENGTH);
+    memcpy(this->members,newMembers,MAX_BUFFER);
+}
+
+vector<string> ChatRoom::getMembers(){
+    vector<string> result;
+    for(int i=0;i<MAX_MEMBER;i++){
+        result.push_back(string(members[i]));
+    }
+    return result;
+}
+
+string ChatRoom::getName(){return (string)this->roomName;}
 
 void chatOut() {
     int fd;
-    fd = open("/tmp/chats.txt", O_CREAT | O_APPEND | O_WRONLY, PERMS);
+    fd = open("/tmp/chats.txt", O_CREAT | O_RDWR, PERMS);
     if (fd == -1) {
         perror("open error!");
         exit(-1);
@@ -195,40 +223,107 @@ void chatOut() {
 
     size_t r_size = 0;
     while (1) {
-        __chat temp_chat;
-        r_size = read(fd, &temp_chat, sizeof(temp_chat));
-        if (r_size == -1)
-            break;
+        __chat *temp_chat = new __chat;
+        memset(temp_chat->send,0x00,MAX_NAME_LENGTH);
+        memset(temp_chat->chatting,0x00,MAX_CHAT_LENGTH);
+        memset(temp_chat->time,0x00,MAX_NAME_LENGTH);
+        memset(temp_chat->receive,0x00,MAX_BUFFER);
 
-        Chats.push_back(Chat((string)temp_chat.send,temp_chat.receive,(string)temp_chat.chatting,(string)temp_chat.time));
+        r_size = read(fd, (__chat*)temp_chat, sizeof(temp_chat));
+        if(r_size==-1){
+            perror("read() error!");
+            exit(-1);
+        }
+        else if (r_size == 0)
+            break;
+        else
+            Chats.push_back(Chat((string)temp_chat->send,temp_chat->receive,(string)temp_chat->chatting,(string)temp_chat->time));
+
+        delete temp_chat;
+    }
+    close(fd);
+
+    int fd2;
+    fd2=open("/tmp/chatList.txt",O_CREAT|O_RDONLY,PERMS);
+    if(fd2==-1) {
+        perror("open error!");
+        exit(-1);
     }
 
-    // 현재 어디까지 chatting을 불러왔는지 체크해주는 변수
-    chatSize=Chats.size();
+    Rooms.clear();
+    r_size=0;
+
+    while(1){
+        __room *temp_room = new __room;
+        memset(temp_room->roomName,0x00,MAX_NAME_LENGTH);
+        memset(temp_room->members,0x00,MAX_BUFFER);
+        r_size=read(fd2,(__room*)temp_room,sizeof(temp_room));
+        if(r_size==-1){
+            perror("read() error!");
+            exit(-1);
+        }
+        else if(r_size==0)
+            break;
+        else
+            Rooms.push_back(ChatRoom(temp_room->roomName,temp_room->members));
+    }
+
+    close(fd2);
 }
 
 void chatIn() {
     int fd;
-    fd = open("/tmp/chats.txt", O_CREAT | O_APPEND | O_WRONLY, PERMS);
+    remove("/tmp/chats.txt");
+
+    fd = open("/tmp/chats.txt", O_CREAT | O_WRONLY, PERMS);
     if (fd == -1) {
         perror("open error!");
         exit(-1);
     }
     size_t w_size = 0;
-
-    for (int i = chatSize; i < Chats.size(); i++) {
-        __chat temp_chat;
-        memcpy(temp_chat.send,Chats[i].getSend().c_str(),MAX_NAME_LENGTH);
-        memcpy(temp_chat.chatting,Chats[i].getChatting().c_str(),MAX_CHAT_LENGTH);
-        memcpy(temp_chat.time,Chats[i].getTime().c_str(),MAX_NAME_LENGTH);
-        temp_chat.receive.clear();
-        temp_chat.receive.assign(Chats[i].getReceive().begin(),Chats[i].getReceive().end());
+    for (int i = 0; i < Chats.size(); i++) {
+        __chat *temp_chat = new __chat;
+        memcpy(temp_chat->send,Chats[i].getSend().c_str(),MAX_NAME_LENGTH);
+        memcpy(temp_chat->chatting,Chats[i].getChatting().c_str(),MAX_CHAT_LENGTH);
+        memcpy(temp_chat->time,Chats[i].getTime().c_str(),MAX_NAME_LENGTH);
+        vector<string> result=Chats[i].getReceive();
+        for(int j=0;j<MAX_MEMBER;j++){
+            memcpy(temp_chat->receive[j],result[j].c_str(),MAX_NAME_LENGTH);
+        }
 
         if ((w_size = write(fd, &temp_chat, sizeof(temp_chat))) == -1) {
             perror("write() error!");
             exit(-1);
         }
+        delete temp_chat;
     }
+    close(fd);
+
+    remove("/tmp/chatList.txt");
+    int fd2;
+    fd2=open("/tmp/chatList.txt", O_CREAT | O_WRONLY, PERMS);
+    if (fd2==-1){
+        perror("open error!");
+        exit(-1);
+    }
+
+    w_size=0;
+
+    for (int i = 0; i < Rooms.size(); i++) {
+        __room *temp_room = new __room;
+        memcpy(temp_room->roomName,Rooms[i].getName().c_str(),MAX_NAME_LENGTH);
+        vector<string> result=Chats[i].getReceive();
+        for(int j=0;j<MAX_MEMBER;j++){
+            memcpy(temp_room->members[j],result[j].c_str(),MAX_NAME_LENGTH);
+        }
+
+        if ((w_size = write(fd, &temp_room, sizeof(temp_room))) == -1) {
+            perror("write() error!");
+            exit(-1);
+        }
+        delete temp_room;
+    }
+    close(fd2);
 }
 
 void out(){
@@ -239,6 +334,7 @@ void out(){
 
 void chatList() {
     while (1) {
+        //chatIn();
         //메뉴 출력
         int number;
         cout << ">> Chat Lists : " << endl;
@@ -246,81 +342,53 @@ void chatList() {
         cout << "0. back" << endl;
         cout << "1. Make new Chat room" << endl;
 
-        //chatList.txt 파일을 읽어서 톡방 갯수에 맞게 출력
-        ifstream chatName;
-        string chatUserName;
-        char selectedChat[100];
-        char line[100];
-        int num = 2;
-        chatName.open("chatList.txt");
-        if (chatName.is_open()) {
-            while (chatName.getline(line, sizeof(line))) {
-                //톡방 이름 chatList.txt에서 줄마다 받아와서 출력
-                cout << num << ". "
-                     << "Chat Name: " << line << endl;
-
-                //톡방 멤버 받아오기, 각 채팅방에 적혀져 있는 유저 목록 불러오기
-                cout << "   Chat Member: ";
-                ifstream in(line);
-                while (getline(in, chatUserName)) {
-                    if (strcmp(chatUserName.c_str(), "END") == 0) {
-                        break;
-                    }
-                    cout << chatUserName << " ";
-                }
-                cout << endl;
-                num++;
+        int count=2;
+        //members에 로그인 되어있는사람(Users[me])이 포함되어있는 채팅방만 출력
+        for(int i=0;i<Rooms.size();i++){
+            if(is_Member(Rooms[i])){
+                cout << count << ". " << Rooms[i].getName() << endl;
+                count++;
             }
         }
-        chatName.close();
 
-        //입력 받는곳
-        cout << " " << endl;
-        cout << ">> select number" << endl;
-        cout << "<< ";
         cin >> number;
+        if(number==-1)
+            out();
 
-        //입력 받은 번호에 따라 선택지 갈림
-        if (number == 0) {
-            cout << "return to back" << endl;
+        if(number==0){
             mainMenu();
             return;
-        } else if (number == 1) {
-            chatMake();
-        } else if (number == -1) {
-            out();
-        //0과1과-1을 입력하지 않았다면 톡방으로 들어 가는걸로 간주
-        } else {
-            //들어갈 톡방 이름을 입력 받음
-            cout << ">> Write the name of chat room which you want to "
-                    "join(include .txt)"
-                 << endl;
-            cout << "<< ";
-            cin >> selectedChat;
-            //입력받은 톡방 열기
-            ofstream ofs2(selectedChat, ios::app);
-            //이곳 부터 채팅 구현 파트
-            ofs2 << "CHATTING" << endl;
-            ofs2.close();
-            exit(-1);
+        }
+
+        if(number==1){
+            while(!chatMake()){}
+            cout << "chatting" << endl;
         }
     }
+}
+
+bool is_Member(ChatRoom room){
+    vector<string> temp_members=room.getMembers();
+    for(int j=0;j<temp_members.size();j++){
+        if(temp_members[j]==Users[me].getName())
+            return true;
+    }
+    return false;
 }
 
 void chatting() {
 
 }
 
-void chatMake() {
-    //톡방 이름 받기
-    char ch[100];
-    char us[100];
-    cout << ">> Please put Chat room name + .txt (ex: memo.txt)" << endl;
+bool chatMake() {
+   // chatIn();
+    vector<string> tempMembers;
+    tempMembers.push_back(Users[me].getName());
+    string ch;
+    cout << ">> Please put Chat room name" << endl;
     cout << "<< ";
     cin >> ch;
 
-    ofstream ofs(ch);
-    //벡터 컨테이너에 담긴 겍체에 접근하여 유저 리스트 먼저 보여줌
     cout << endl << ">> ( User List )" << endl;
     int count =1;
     for (int i = 0; i < Users.size(); i++){
@@ -329,28 +397,49 @@ void chatMake() {
             count++;
         }
     }
+
     //초대할 유저 고르는 파트, 0을 누르면 초대 종료
     cout << ">> Please write users you want to invite: " << endl;
     cout << "   (Write 0 to finish)" << endl;
-    while (1) {
+
+    string us;
+    while(1){
         cin >> us;
-        if (strcmp(us, "0") == 0) {
+        if(us=="0")
             break;
-        } else {
-            ofs << us << endl;
+        //us에 저장되어있는 이름이 실제로 있는 이름인지 확인하고 저장
+        int i;
+        for(i=0;i<tempMembers.size();i++){
+            if(tempMembers[i]==us){
+                cout << "Duplicative invitation - Failed to invite. :(" << endl;
+                goto here;
+                break;
+            }
+        }
+        for(i=0;i<Users.size();i++){
+            if(us==Users[i].getName()){
+                tempMembers.push_back(us);
+                cout << "Successfully invited!" << endl;
+                break;
+            }
+        }
+
+        if(i==Users.size())
+            cout << "Failed to invite. :(" << endl;
+        here:
+        us.clear();
+    }
+
+    // 기존에 있는 톡방인지 확인
+    for(int i=0;i<Rooms.size();i++) {
+        if(Rooms[i].getMembers()==tempMembers){
+            cout << "구성원이 동일한 채팅방이 존재합니다." << endl;
+            return false;
         }
     }
-    //각 톡방 유저 목록을 위해 선 입력
-    ofs << "END" << endl;
-    ofs << "<Chat room member>" << endl;
-    ofs << "-----------------" << endl;
-    ofs.close();
-
-    //톡방 이름 txt 따로 저장
-    ofstream ofs2("chatList.txt", ios::app);
-    ofs2.write(ch, strlen(ch));
-    ofs2.put('\n');
-    ofs2.close();
+    Rooms.push_back(ChatRoom(ch,tempMembers));
+    //chatOut();
+    return true;
 }
 
 void signUp() {

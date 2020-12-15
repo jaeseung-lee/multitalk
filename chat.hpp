@@ -9,6 +9,8 @@
 #define MAX_NAME_LENGTH 32
 #define MAX_STATUS_LENGTH 256
 #define MAX_CHAT_LENGTH 256
+#define MAX_MEMBER 8
+#define MAX_BUFFER MAX_MEMBER*(MAX_NAME_LENGTH+1)
 
 using namespace std;
 /*
@@ -44,6 +46,7 @@ class Chat{
   public:
     Chat();
     Chat(string newSend,vector<string> newReceive,string newChatting,string newTime);
+    Chat(string newSend,char newReceive[MAX_MEMBER][MAX_NAME_LENGTH+1],string newChatting, string newTime);
     string getSend();
     vector<string> getReceive();
     string getChatting();
@@ -51,7 +54,7 @@ class Chat{
 
    private:
     char send[MAX_NAME_LENGTH+1];
-    vector<string> receive;
+    char receive[MAX_MEMBER][MAX_NAME_LENGTH+1];
     char chatting[MAX_CHAT_LENGTH+1];
     char time[MAX_NAME_LENGTH+1];
 };
@@ -60,9 +63,13 @@ class ChatRoom{
   public:
     ChatRoom();
     ChatRoom(string newRoomName,vector<string> newMembers);
+    ChatRoom(string newRoomName,char newMembers[MAX_MEMBER][MAX_NAME_LENGTH+1]);
+    vector<string> getMembers();
+    string getName();
+
   private:
     char roomName[MAX_NAME_LENGTH+1];
-    vector<string> members;
+    char members[MAX_MEMBER][MAX_NAME_LENGTH+1];
 };
 
 
@@ -113,7 +120,10 @@ void sendChat();
 */
 void chatList();
 
-void chatMake();
+bool chatMake();
+
+// Check whether the room contains Users[me].getName()
+bool is_Member(ChatRoom room);
 
 // Show all messages which is sent or receieved in time order.
 void chatting();
