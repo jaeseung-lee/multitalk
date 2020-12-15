@@ -1,9 +1,7 @@
-#include "chat.hpp"
+#include "chat.cpp"
 #include <iostream>
 
 int main(){
-    upload();
-    download();
-    chatOut();
-    chatIn();
+    signal(SIGINT,signalHandler);
+    startMenu();
 }

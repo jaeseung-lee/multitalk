@@ -23,16 +23,20 @@ class User {
   public:
     User();
     //처음에 아이디 만들었을 때 호출할 것
-    User(string newName);
-    //다른 사용자가 가입했을 때 불러올 것
-    User(string newName, string newStatus);
+    User(string newName, string newPW);
+    User(string newName, string newPW, string newStatus);
+
     string getName(void);
+    string getPW(void);
     string getStatus(void);
-    void setStatus(string newName);
-    void setName(string newStatus);
+
+    void setName(string newName);
+    void setPW(string newPW);
+    void setStatus(string newStatus);
 
   private:
     char name[MAX_NAME_LENGTH + 1];
+    char password[MAX_NAME_LENGTH + 1];
     char status[MAX_STATUS_LENGTH + 1];
 };
 

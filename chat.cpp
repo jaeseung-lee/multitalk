@@ -1,6 +1,4 @@
 #include "chat.hpp"
-#include "login.hpp" //추가
-#include <list> //추가
 #include <iostream>
 #include <string>
 #include <fcntl.h>
@@ -18,6 +16,7 @@
 using namespace std;
 typedef struct {
     char name[MAX_NAME_LENGTH + 1];
+    char password[MAX_NAME_LENGTH + 1];
     char status[MAX_STATUS_LENGTH + 1];
 } Userinfo;
 
@@ -39,30 +38,40 @@ int chatSize=0;
 void signalHandler(int signum){
     if(signum==SIGINT){
         upload();
-        chatOut();
         exit(0);
     }
 }
 
 User::User() {
     memset(this->name, 0x00, MAX_NAME_LENGTH + 1);
-    memset(this->status, 0x00, MAX_STATUS_LENGTH + 1);
+    memset(this->password, 0x00, MAX_NAME_LENGTH + 1);
 }
-User::User(string newName) {
+
+//현재 접속해 있는 유저의 정보를 담고있는 클래스의 번호
+//Users[me];
+int me;
+
+User::User(string newName, string newPW) {
     memcpy(this->name, newName.c_str(), MAX_NAME_LENGTH + 1);
-    memset(this->status, 0x00, MAX_STATUS_LENGTH + 1);
+    memcpy(this->password, newPW.c_str(), MAX_NAME_LENGTH + 1);
 }
-User::User(string newName, string newStatus) {
+
+User::User(string newName, string newPW, string newStatus){
     memcpy(this->name, newName.c_str(), MAX_NAME_LENGTH + 1);
-    memcpy(this->status, newStatus.c_str(), MAX_STATUS_LENGTH + 1);
+    memcpy(this->password, newPW.c_str(), MAX_NAME_LENGTH + 1);
+    memcpy(this->status, newStatus.c_str(), MAX_STATUS_LENGTH+1);
 }
 
 string User::getName(void) { return string(this->name); }
-
+string User::getPW(void) { return string(this->password);}
 string User::getStatus(void) { return string(this->status); }
 
-void User::setName(string newName) {
-    memcpy(this->name, newName.c_str(), MAX_NAME_LENGTH);
+void User::setName(string newName){
+    memcpy(this->name, newName.c_str(),MAX_NAME_LENGTH);
+}
+
+void User::setPW(string newPW){
+    memcpy(this->password, newPW.c_str(),MAX_NAME_LENGTH);
 }
 
 void User::setStatus(string newStatus) {
@@ -71,50 +80,32 @@ void User::setStatus(string newStatus) {
 
 void upload(void) {
     int fd;
-    fd = open("/tmp/chattings.dat", O_CREAT | O_APPEND | O_RDWR, PERMS);
+    remove("tmp/chattings.dat");
+
+    fd = open("/tmp/chattings.dat", O_CREAT | O_RDWR, PERMS);
     if (fd == -1) {
         cout << "open() error!" << endl;
         exit(-1);
     }
 
     ssize_t wsize = 0;
-    vector<User>::iterator it;
     //유저 정보가 담겨있는 벡터를 텍스트 파일에 갱신
     //만약 이미 유저의 이름이 텍스트파일에 있다면 상태메세지만 갱신해주고
     //유저의 이름이 없다면 생성해준다.
-    for (it = Users.begin(); it != Users.end(); it++) {
+    for (int i=0; i<Users.size(); i++) {
         ssize_t rsize = 0;
         //유저 정보를 담을 구조체를 초기화시켜준다.
         Userinfo *userinfo = new Userinfo;
-        memset(userinfo->name, 0x00, MAX_NAME_LENGTH);
-        memset(userinfo->status, 0x00, MAX_STATUS_LENGTH);
+        memcpy(userinfo->name, Users[i].getName().c_str(), MAX_NAME_LENGTH);
+        memcpy(userinfo->password, Users[i].getPW().c_str(), MAX_NAME_LENGTH);
+        memcpy(userinfo->status, Users[i].getStatus().c_str(), MAX_STATUS_LENGTH);
 
-        //유저 정보를 구조체에 담고, 하나씩 확인
-        while (true) {
-            rsize = read(fd, (Userinfo *)userinfo, sizeof(Userinfo));
-            if (rsize == -1) {
-                cout << "upload read() error!" << endl;
-                exit(-1);
-            }
-            //더 이상 읽을 내용이 없다면 정보를 입력한다.
-            else if (rsize == 0) {
-                wsize = write(fd, &(*it), sizeof(User));
-                if (wsize == -1) {
-                    cout << "upload write() error!" << endl;
-                    exit(1);
-                }
-                break;
-            }
-            //읽을 내용이 있는데, 그 내용의 이름과 vector의 이름과 동일하다면
-            //상태메세지 갱신
-            else {
-                if (userinfo->name == (*it).getName()) {
-                    (*it).setStatus(userinfo->status);
-                    break;
-                }
-            }
-            delete userinfo;
+        wsize = write(fd, userinfo, sizeof(User));
+        if(wsize==-1){
+            perror("write() error\n");
+            exit(-1);
         }
+        delete userinfo;
     }
     close(fd);
 }
@@ -128,12 +119,15 @@ void download(void) {
     }
 
     ssize_t rsize = 0;
+
     while (1) {
         //유저의 정보를 담을 구조체 초기화
         Userinfo *userinfo = new Userinfo;
         memset(userinfo->name, 0x00, MAX_NAME_LENGTH);
+        memset(userinfo->password, 0x00, MAX_NAME_LENGTH);
         memset(userinfo->status, 0x00, MAX_STATUS_LENGTH);
-        if (rsize = read(fd, (Userinfo *)userinfo, sizeof(Userinfo)) == -1) {
+
+        if ((rsize = read(fd, (Userinfo *)userinfo, sizeof(Userinfo)) )== -1) {
             cout << "download error! " << endl;
             exit(-1);
         } else if (rsize == 0) {
@@ -149,7 +143,7 @@ void download(void) {
             }
             //같은게 발견되지 않으면 벡터에 새로운 유저를 만들어서 넣어준다.
             if (it == Users.end())
-                Users.push_back(User(userinfo->name, userinfo->status));
+                Users.push_back(User(userinfo->name, userinfo->password, userinfo->status));
         }
         delete userinfo;
     }
@@ -161,7 +155,7 @@ Chat::Chat(){
     memset(this->chatting,0x00,MAX_CHAT_LENGTH);
     memset(this->time,0x00,MAX_NAME_LENGTH);
     receive.clear();
-    }
+}
 
 Chat::Chat(string newSend,vector<string> newReceive,string newChatting,string newTime){
     memcpy(this->send,newSend.c_str(),MAX_NAME_LENGTH);
@@ -231,7 +225,6 @@ void chatIn() {
 void out(){
     cout << "Good-bye!" << endl;
     upload();
-    chatIn();
 }
 
 void chatList() {
@@ -343,122 +336,47 @@ void chatMake() {
 }
 
 void signUp() {
-    int num = 0;
-    string id1 = "";
-    string pw1 = "";
-    Person* pr;
-    list<Person> user;
-    list<Person> newuser;
-
-    int fd = open("./logList.dat", O_CREAT | O_APPEND | O_RDWR, PERMS);
-    if (fd == -1) {
-        cout << "open() error!" << endl;
-        exit(-1);
-    }
-
-    ssize_t rSize = 0;
-    while (rSize = read(fd, (Person*)pr, sizeof(Person))) {
-        if (rSize == -1) {
-            cout << "error!" << endl;
-            exit(-1);
-        }
-        id1 = pr->getId();
-        pw1 = pr->getPw();
-        Person info(id1, pw1);
-        user.push_back(info);
-        num++;
-    }
-
+    download();
     string id = "";
     string pw = "";
-    if (num = 0) {
+
+    while(1) {
         cout << "ID (input) : ";
         cin >> id;
-        cout << "PW (input) : ";
-        cin >> pw;
-        Person nuser1(id, pw);
-        newuser.push_back(nuser1);
 
-        list<Person>::iterator iter;
-        for (iter = newuser.begin(); iter != newuser.end(); ++iter) {
-            if (write(fd, &(*iter), sizeof(Person)) == -1) {
-                cout << "write error!" << endl;
-                exit(-1);
-            }
-        }
-        close(fd);
-        cout << "***회원가입 성공!***";
-
-        return;
-    }
-    else if (num > 0) {
-        int count = 1;
-        while (count % 2 == 1) {
-            int tmp = 1;
-            string id2 = "";
-            string pw2 = "";
-
-            cout << "ID (input) : ";
-            cin >> id2;
-            cout << "PW (input) : ";
-            cin >> pw2;
-
-            list<Person>::iterator itr;
-            for (itr = user.begin(); itr != user.end(); ++itr) {
-                if (id2 == itr->getId()) {
-                    cout << "***ID 중복! 다시 입력해주세요!***" << endl;
-                    tmp = 2;
-                }
-            }
-
-            if (tmp == 1) {
-                Person nuser2(id2, pw2);
-                newuser.push_back(nuser2);
-                list<Person>::iterator itr2;
-                for (itr2 = newuser.begin(); itr2 != newuser.end(); ++itr2) {
-                    if (write(fd, &(*itr2), sizeof(Person)) == -1) {
-                        cout << "write error!" << endl;
-                        exit(-1);
-                    }
-                }
-                close(fd);
-                cout << "***회원가입 성공!***";
-                count = 2;
+        // 회원가입시 동일한 아이디가 있는지 확인
+        int i;
+        for(i=0;i<Users.size();i++){
+            if(Users[i].getName()==id){
+                cout << "동일한 아이디가 존재합니다." << endl;
+                break;
             }
         }
 
-        return;
+        if(i==Users.size())
+            break;
     }
 
+    cout << "PW (input) : ";
+    cin >> pw;
+
+    Users.push_back(User(id,pw));
+    cout << "***회원가입 성공!***"<<endl;
+    upload();
+    startMenu();
+    return;
 }
 
 void signIn() {
+    download();
+
     cout << "***로그인***" << endl;
     int tmp = 0;
     string id1 = "";
     string pw1 = "";
-    Person* pr;
-    list<Person> user;
-    list<Person> loguser;
 
-    int fd = open("./logList.dat", O_CREAT | O_APPEND | O_RDWR, PERMS);
-    if (fd == -1) {
-        cout << "open() error!" << endl;
-        exit(-1);
-    }
-
-    ssize_t rSize = 0;
-    while (rSize = read(fd, (Person*)pr, sizeof(Person))) {
-        if (rSize == -1) {
-            cout << "error!" << endl;
-            exit(-1);
-        }
-
-        id1 = pr->getId();
-        pw1 = pr->getPw();
-        Person info(id1, pw1);
-        user.push_back(info);
-    }
+    vector<User>::iterator itr;
+    int count=0;
 
     while (tmp == 0) {
         string id2 = "";
@@ -468,12 +386,13 @@ void signIn() {
         cout << "PW : ";
         cin >> pw2;
 
-        list<Person>::iterator itr;
-        for (itr = user.begin(); itr != user.end(); ++itr) {
-            if (id2 == itr->getId()) {
-                if (pw2 == itr->getPw()) {
-                    tmp = 1;
-                }
+        for (itr = Users.begin(); itr != Users.end(); ++itr){
+            cout << "name: " << (*itr).getName() << " PW: " << (*itr).getPW() << endl;
+        }
+
+        for (itr = Users.begin(); itr != Users.end(); ++itr) {
+            if (id2 == (*itr).getName() && pw2==(*itr).getPW()) {
+                tmp = 1;
             }
         }
 
@@ -484,9 +403,84 @@ void signIn() {
 
     if (tmp == 1) {
         cout << "***로그인 성공!***" << endl;
-
+        me=count;
+        mainMenu();
         return;
-        //여기서 시작메뉴창으로 넘어가야함
     }
+}
 
+void startMenu(){
+    while(1){
+        cout << "채팅 프로그램에 오신 것을 환영합니다." << endl;
+        cout << "1. 로그인" << endl;
+        cout << "2. 회원가입" << endl;
+
+        int choice=0;
+        cin >> choice;
+
+        if(choice == 1){
+            signIn();
+            return;
+        }
+
+        if(choice == 2) {
+            signUp();
+            return;
+        }
+    }
+}
+
+void mainMenu(){
+    while(1){
+        cout << "****메인 메뉴****" << endl;
+        cout << "0. 종료" << endl;
+        cout << "1. 상태메세지 보기" << endl;
+        cout << "2. 나의 상태메세지 수정하기" << endl;
+        cout << "3. 채팅 목록 열기" << endl;
+
+        int choice=0;
+        cin >> choice;
+
+        if(choice == 0){
+            chatOut();
+        }
+
+        if(choice == 1){
+            seeStatus();
+        }
+
+        if(choice == 2) {
+            changeStatus();
+        }
+
+        if(choice == 3){
+            chatList();
+            return;
+        }
+    }
+}
+
+void seeStatus() {
+    download();
+    cout << "***상태메세지 목록***" << endl;
+	vector<User>::iterator it;
+	for (it = Users.begin(); it != Users.end(); it++) {
+		cout << (*it).getName();
+		cout << "\t <[ " << (*it).getStatus() << " ]" << endl;
+		cout << "---------------------------------" << endl;
+	}
+    return;
+}
+
+void changeStatus(){
+    download();
+    cout << "***상태메세지 수정하기***" << endl;
+    cout << "현재 상태메세지 : " << "\t <[ " << Users[me].getStatus() << " ]" << endl;
+    cout << "바꿀 상태메세지를 입력해주세요." << endl;
+    char temp[MAX_STATUS_LENGTH+1];
+    scanf("%257s",temp);
+    Users[me].setStatus((string)temp);
+    cout << "바뀐 상태메세지 : " << "\t <[ " << Users[me].getStatus() << " ]" << endl;
+    upload();
+    return;
 }
