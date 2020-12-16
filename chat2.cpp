@@ -342,6 +342,7 @@ void chatList() {
                 cout << count << ". " << Rooms[i].getName() << endl;
                 cout << "   MEMBERS: " << Rooms[i].getReceive() << ", "
                      << Rooms[i].getSend() << endl;
+                count++; //채팅방 목록 번호에 맞게 출력
             }
         }
         cout << endl;
