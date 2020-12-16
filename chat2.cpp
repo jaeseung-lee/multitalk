@@ -389,7 +389,7 @@ void chatList() {
 
                 }
 
-                    cout << "count : " << count << endl;
+                    //cout << "count : " << count << endl;
                 if (number == count) {
                     chatting(Rooms[i]);
                     break;
