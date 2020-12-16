@@ -326,8 +326,12 @@ void chatOut() {
 }
 
 void out() {
-    upload();
-    chatOut();
+    if (Users.size() >
+        0) { //회원정보가 아무것도 없을 때 종료하면 로직오류발생 방지
+        upload();
+        chatOut();
+    }
+
     system("clear");
     cout << "+===================================+" << endl << endl;
     cout << "        THANK YOU FOR USING" << endl;
@@ -386,10 +390,9 @@ void chatList() {
                 if (Rooms[i].getSend() == Users[me].getName() ||
                     Rooms[i].getReceive() == Users[me].getName()) {
                     count++;
-
                 }
 
-                    //cout << "count : " << count << endl;
+                // cout << "count : " << count << endl;
                 if (number == count) {
                     chatting(Rooms[i]);
                     break;
@@ -455,6 +458,7 @@ void chatting(ChatRoom room) {
 }
 
 bool chatMake() {
+    download();
     chatIn();
     string ch;
     cout << endl;
@@ -483,12 +487,6 @@ bool chatMake() {
         for (i = 0; i < Users.size(); i++) {
             if (us == Users[i].getName()) {
                 cout << endl;
-                cout << "+----------WARNING---------+" << endl;
-                cout << endl;
-                cout << "          초대 성공!" << endl;
-                cout << endl;
-                cout << "+--------------------------+" << endl;
-                cout << endl;
                 break;
             }
         }
@@ -511,12 +509,20 @@ bool chatMake() {
         //  Rooms[i].getReceive() : "<<Rooms[i].getReceive() << endl;
         if (Rooms[i].getSend() == us &&
             Rooms[i].getReceive() == Users[me].getName()) {
-            cout << "구성원이 동일한 채팅방이 존재합니다." << endl;
+            cout << endl;
+            cout << "+----------------------------------------+" << endl;
+            cout << "     구성원이 동일한 채팅방이 존재합니다." << endl;
+            cout << "+----------------------------------------+" << endl;
+            cout << endl;
             return false;
         }
         if (Rooms[i].getReceive() == us &&
             Rooms[i].getSend() == Users[me].getName()) {
-            cout << "구성원이 동일한 채팅방이 존재합니다." << endl;
+            cout << endl;
+            cout << "+----------------------------------------+" << endl;
+            cout << "     구성원이 동일한 채팅방이 존재합니다." << endl;
+            cout << "+----------------------------------------+" << endl;
+            cout << endl;
             return false;
         }
     }
@@ -529,7 +535,7 @@ bool chatMake() {
 void signUp() {
     system("clear");
     cout << "+====================================+" << endl;
-    cout << "               Sign up               " << endl;
+    cout << "                회원가입               " << endl;
     cout << "+====================================+" << endl;
     cout << endl;
     download();
@@ -580,7 +586,7 @@ void signUp() {
 void signIn() {
     system("clear");
     cout << "+====================================+" << endl;
-    cout << "                Login                 " << endl;
+    cout << "                로그인                 " << endl;
     cout << "+====================================+" << endl;
     cout << endl;
     download();
@@ -661,7 +667,6 @@ void startMenu() {
         cin.ignore(100, '\n');
         if (choice == 0) {
             out();
-            return;
         }
         if (choice == 1) {
             signIn();
@@ -678,7 +683,7 @@ void startMenu() {
 void mainMenu() {
     system("clear");
     cout << "+====================================+" << endl;
-    cout << "             Main Menu              " << endl;
+    cout << "               Main Menu              " << endl;
     cout << "+====================================+" << endl;
     cout << endl;
     cout << Users[me].getName() << " 님, 안녕하세요!" << endl;
