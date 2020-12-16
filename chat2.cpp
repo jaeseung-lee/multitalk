@@ -10,6 +10,7 @@
 #include <string.h>
 #include <signal.h>
 #include <fstream>
+#include <ctime>
 
 #define PERMS 0664
 
@@ -319,11 +320,12 @@ void chatList() {
         for(int i=0;i<Rooms.size();i++){
             if(Rooms[i].getSend()==Users[me].getName() || Rooms[i].getReceive()==Users[me].getName()){
                 cout << count << ". " << Rooms[i].getName() << endl;
-                count++;
+                cout << "**with " << Rooms[i].getReceive() << ", " << Rooms[i].getSend() << endl;
             }
         }
-
         cin >> number;
+        cin.ignore(100, '\n');
+
         if(number==-1)
             out();
 
@@ -342,6 +344,7 @@ void chatList() {
             for(int i=0;i<Rooms.size();i++){
                 if(Rooms[i].getSend()==Users[me].getName() || Rooms[i].getReceive()==Users[me].getName()){
                     count++;
+                    //cout << "count : " << count << endl;
                 }
                 if(number==count)
                     chatting(Rooms[i]);
@@ -352,7 +355,7 @@ void chatList() {
 }
 
 void chatting(ChatRoom room) {
-    chatIn();
+    //chatIn();
     string other;
     if(room.getSend()==Users[me].getName())
         other=room.getReceive();
@@ -377,23 +380,26 @@ void chatting(ChatRoom room) {
         cout << "채팅 보내기를 종료하시려면 q를 입력해주세요." << endl;
         cout << "입력 : " << endl;
         string temp;
-        scanf("%257s",temp);
+        getline(cin,temp);
         if(temp=="q")
             return;
         else {
-            Chats.push_back(Chat(Users[me].getName(),other,temp,"time"));
+            time_t rawtime;
+            time(&rawtime);
+            Chats.push_back(Chat(Users[me].getName(),other,temp,(string)ctime(&rawtime)));
+            cout << ctime(&rawtime);
             cout << "입력완료!" << endl;
         }
     }
-    chatOut();
+    //chatOut();
 }
 
 bool chatMake() {
-    chatIn();
+    //chatIn();
     string ch;
     cout << ">> 채팅방의 이름을 입력해주세요." << endl;
     cout << "<< ";
-    cin >> ch;
+    getline(cin,ch);
 
     cout << endl << ">> ( 유저 목록 )" << endl;
     int count =1;
@@ -409,7 +415,7 @@ bool chatMake() {
     string us;
 
     while(1) {
-        cin >> us;
+        getline(cin,us);
         //us에 저장되어있는 이름이 실제로 있는 이름인지 확인하고 저장
         int i;
         for(i=0;i<Users.size();i++) {
@@ -427,16 +433,19 @@ bool chatMake() {
 
     // 기존에 있는 톡방인지 확인
     for(int i=0;i<Rooms.size();i++) {
+          //  cout << "Rooms[i].getsend(): "<<Rooms[i].getSend() << " Rooms[i].getReceive() : "<<Rooms[i].getReceive() << endl;
         if(Rooms[i].getSend()==us && Rooms[i].getReceive()==Users[me].getName()){
-            if(Rooms[i].getReceive()==us && Rooms[i].getSend()==Users[me].getName()){
-                cout << "구성원이 동일한 채팅방이 존재합니다." << endl;
-                return false;
-            }
+            cout << "구성원이 동일한 채팅방이 존재합니다." << endl;
+            return false;
+        }
+        if(Rooms[i].getReceive()==us && Rooms[i].getSend()==Users[me].getName()){
+            cout << "구성원이 동일한 채팅방이 존재합니다." << endl;
+            return false;
         }
     }
 
     Rooms.push_back(ChatRoom(ch,Users[me].getName(),us));
-    chatOut();
+    //chatOut();
     return true;
 }
 
@@ -447,8 +456,7 @@ void signUp() {
 
     while(1) {
         cout << "ID (input) : ";
-        cin >> id;
-
+        getline(cin,id);
         // 회원가입시 동일한 아이디가 있는지 확인
         int i;
         for(i=0;i<Users.size();i++){
@@ -463,7 +471,7 @@ void signUp() {
     }
 
     cout << "PW (input) : ";
-    cin >> pw;
+    getline(cin,pw);
 
     Users.push_back(User(id,pw));
     cout << "***회원가입 성공!***"<<endl;
