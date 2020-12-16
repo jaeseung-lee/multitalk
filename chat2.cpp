@@ -93,6 +93,22 @@ void upload(void) {
     }
 
     ssize_t wsize = 0;
+    if (Users.size() == 0) {
+        Userinfo *userinfo = new Userinfo;
+        memcpy(userinfo->name, Users[0].getName().c_str(), MAX_NAME_LENGTH);
+        memcpy(userinfo->password, Users[0].getPW().c_str(), MAX_NAME_LENGTH);
+        memcpy(userinfo->status, Users[0].getStatus().c_str(),
+               MAX_STATUS_LENGTH);
+
+        wsize = write(fd, userinfo, sizeof(User));
+        if (wsize == -1) {
+            perror("write() error\n");
+            exit(-1);
+        }
+        delete userinfo;
+        close(fd);
+        return;
+    }
 
     for (int i = 0; i < Users.size(); i++) {
         Userinfo *userinfo = new Userinfo;
