@@ -386,11 +386,14 @@ void chatList() {
                 if (Rooms[i].getSend() == Users[me].getName() ||
                     Rooms[i].getReceive() == Users[me].getName()) {
                     count++;
-                    // cout << "count : " << count << endl;
+
                 }
-                if (number == count)
+
+                    cout << "count : " << count << endl;
+                if (number == count) {
                     chatting(Rooms[i]);
-                break;
+                    break;
+                }
             }
         }
     }
