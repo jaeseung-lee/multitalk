@@ -542,8 +542,13 @@ void signUp() {
             break;
     }
 
-    cout << "PW (input) : ";
-    getline(cin, pw);
+    // cout << "PW (input) : ";
+    // getline(cin, pw);
+
+    //비밀번호 보안
+    char *p;
+    p = getpass("PW (input) : ");
+    pw = p;
 
     Users.push_back(User(id, pw));
     cout << "***회원가입 성공!***" << endl;
@@ -576,12 +581,17 @@ void signIn() {
             startMenu();
             return;
         }
-        cout << "PW : ";
-        getline(cin, pw2);
+        // cout << "PW : ";
+        // getline(cin, pw2)
+
+        //비밀번호 보안
+        char *p;
+        p = getpass("PW : ");
+        pw2 = p;
 
         /*for (itr = Users.begin(); itr != Users.end(); ++itr){
-            cout << "name: " << (*itr).getName() << " PW: " << (*itr).getPW() <<
-        endl;
+            cout << "name: " << (*itr).getName() << " PW: " <<
+        (*itr).getPW() << endl;
         }
         */
         for (itr = Users.begin(); itr != Users.end(); ++itr) {
