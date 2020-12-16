@@ -10,3 +10,9 @@
 * 원하는 이름으로 채팅방을 연 뒤 상대방 초대
 * 이후 채팅방에서 서로 대화를 주고 받을 수 있음
 * 회원의 수는 제한되지 않는다.
+
+3. 사용방법
+* ubuntu환경에서 실행한다.
+* multitalk파일(chat2.hpp, chat2.cpp, main2.cpp)을 전부 받는다.
+* 터미널창에서 "g++ main2.cpp -o main2.out -std=c++14"를 입력하여 main2.out를 생성한다.
+* "./main2.out"를 입력하고 실행시켜 multitalk 프로그램을 이용한다.
