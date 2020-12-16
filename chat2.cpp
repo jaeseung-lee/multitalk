@@ -162,7 +162,6 @@ Chat::Chat(string newSend,string newReceive,string newChatting,string newTime){
     memcpy(this->chatting,newChatting.c_str(),MAX_CHAT_LENGTH);
     memcpy(this->time,newTime.c_str(),MAX_NAME_LENGTH);
     memcpy(this->receive,newReceive.c_str(),MAX_NAME_LENGTH);
-
 }
 
 string Chat::getSend(){return string(this->send);}
@@ -186,7 +185,7 @@ string ChatRoom::getName(){return (string)this->roomName;}
 
 void chatIn() {
     int fd;
-    fd = open("/tmp/chats.txt", O_CREAT | O_RDWR, PERMS);
+    fd = open("/tmp/chats.dat", O_CREAT | O_RDWR, PERMS);
     if (fd == -1) {
         perror("open error!");
         exit(-1);
@@ -203,27 +202,27 @@ void chatIn() {
         memset(temp_chat->time,0x00,MAX_NAME_LENGTH);
         memset(temp_chat->receive,0x00,MAX_NAME_LENGTH);
 
-        r_size = read(fd, (__chat*)temp_chat, sizeof(temp_chat));
+        r_size = read(fd, (__chat*)temp_chat, sizeof(__chat));
         if(r_size==-1){
             perror("read() error!");
             exit(-1);
         }
         else if (r_size == 0)
             break;
-        else
+        else {
             Chats.push_back(Chat((string)temp_chat->send,(string)temp_chat->receive,(string)temp_chat->chatting,(string)temp_chat->time));
+        }
 
         delete temp_chat;
     }
     close(fd);
 
     int fd2;
-    fd2=open("/tmp/chatList.txt",O_CREAT | O_RDWR, PERMS);
+    fd2=open("/tmp/chatList.dat",O_CREAT | O_RDWR, PERMS);
     if(fd2==-1) {
         perror("open error!");
         exit(-1);
     }
-
     Rooms.clear();
     r_size=0;
 
@@ -232,7 +231,8 @@ void chatIn() {
         memset(temp_room->roomName,0x00,MAX_NAME_LENGTH);
         memset(temp_room->send,0x00,MAX_NAME_LENGTH);
         memset(temp_room->receive,0x00,MAX_NAME_LENGTH);
-        r_size=read(fd2,(__room*)temp_room,sizeof(temp_room));
+
+        r_size=read(fd2,(__room*)temp_room,sizeof(__room));
         if(r_size==-1){
             perror("read() error!");
             exit(-1);
@@ -242,30 +242,29 @@ void chatIn() {
         else
             Rooms.push_back(ChatRoom((string)temp_room->roomName,(string)temp_room->send,(string)temp_room->receive));
     }
-
     close(fd2);
 }
 
 void chatOut() {
     int fd;
-    remove("/tmp/chats.txt");
+    remove("/tmp/chats.dat");
 
-    fd = open("/tmp/chats.txt", O_CREAT | O_RDWR , PERMS);
+    fd = open("/tmp/chats.dat", O_CREAT | O_RDWR , PERMS);
     if (fd == -1) {
         perror("open error!");
         exit(-1);
     }
-    size_t w_size = 0;
+    ssize_t w_size = 0;
 
     for (int i = 0; i < Chats.size(); i++) {
         __chat *temp_chat = new __chat;
         memcpy(temp_chat->send, Chats[i].getSend().c_str(), MAX_NAME_LENGTH);
         memcpy(temp_chat->chatting, Chats[i].getChatting().c_str(), MAX_CHAT_LENGTH);
         memcpy(temp_chat->time, Chats[i].getTime().c_str(), MAX_NAME_LENGTH);
-        memcpy(temp_chat->receive, Chats[i].getSend().c_str(), MAX_NAME_LENGTH);
+        memcpy(temp_chat->receive, Chats[i].getReceive().c_str(), MAX_NAME_LENGTH);
 
         w_size = write(fd, temp_chat, sizeof(Chat));
-
+        cout << "chats" << Chats[i].getSend()<<endl;
         if (w_size == -1) {
             perror("write() error!\n");
             exit(-1);
@@ -274,9 +273,9 @@ void chatOut() {
     }
     close(fd);
 
-    remove("/tmp/chatList.txt");
+    remove("/tmp/chatList.dat");
     int fd2;
-    fd2=open("/tmp/chatList.txt", O_CREAT | O_WRONLY, PERMS);
+    fd2=open("/tmp/chatList.dat", O_CREAT | O_WRONLY | O_TRUNC, PERMS);
     if (fd2==-1){
         perror("open error!");
         exit(-1);
@@ -289,8 +288,7 @@ void chatOut() {
         memcpy(temp_room->roomName,Rooms[i].getName().c_str(),MAX_NAME_LENGTH);
         memcpy(temp_room->send,Rooms[i].getSend().c_str(),MAX_NAME_LENGTH);
         memcpy(temp_room->receive,Rooms[i].getReceive().c_str(),MAX_NAME_LENGTH);
-
-        if ((w_size = write(fd, &temp_room, sizeof(temp_room))) == -1) {
+        if ((w_size = write(fd, temp_room, sizeof(__room))) == -1) {
             perror("write() error!");
             exit(-1);
         }
@@ -302,12 +300,13 @@ void chatOut() {
 void out(){
     cout << "Good-bye!" << endl;
     upload();
+    chatOut();
     exit(-1);
 }
 
 void chatList() {
     while (1) {
-        //chatIn();
+        chatIn();
         //메뉴 출력
         int number;
         cout << ">> Chat Lists : " << endl;
@@ -355,8 +354,9 @@ void chatList() {
 }
 
 void chatting(ChatRoom room) {
-    //chatIn();
+    chatIn();
     string other;
+    //cout << "방"<<room.getSend() << " "<<room.getReceive() << endl;
     if(room.getSend()==Users[me].getName())
         other=room.getReceive();
     else
@@ -382,7 +382,7 @@ void chatting(ChatRoom room) {
         string temp;
         getline(cin,temp);
         if(temp=="q")
-            return;
+            break;
         else {
             time_t rawtime;
             time(&rawtime);
@@ -391,11 +391,11 @@ void chatting(ChatRoom room) {
             cout << "입력완료!" << endl;
         }
     }
-    //chatOut();
+    chatOut();
 }
 
 bool chatMake() {
-    //chatIn();
+    chatIn();
     string ch;
     cout << ">> 채팅방의 이름을 입력해주세요." << endl;
     cout << "<< ";
@@ -445,7 +445,7 @@ bool chatMake() {
     }
 
     Rooms.push_back(ChatRoom(ch,Users[me].getName(),us));
-    //chatOut();
+    chatOut();
     return true;
 }
 
@@ -495,14 +495,14 @@ void signIn() {
         string id2 = "";
         string pw2 = "";
         cout << "ID : ";
-        cin >> id2;
+        getline(cin,id2);
         cout << "PW : ";
-        cin >> pw2;
+        getline(cin,pw2);
 
-        for (itr = Users.begin(); itr != Users.end(); ++itr){
+        /*for (itr = Users.begin(); itr != Users.end(); ++itr){
             cout << "name: " << (*itr).getName() << " PW: " << (*itr).getPW() << endl;
         }
-
+        */
         for (itr = Users.begin(); itr != Users.end(); ++itr) {
             if (id2 == (*itr).getName() && pw2==(*itr).getPW()) {
                 tmp = 1;
@@ -532,7 +532,7 @@ void startMenu(){
 
         int choice=0;
         cin >> choice;
-
+        cin.ignore(100,'\n');
         if(choice == 1){
             signIn();
             return;
@@ -559,9 +559,10 @@ void mainMenu(){
 
         int choice=0;
         cin >> choice;
+        cin.ignore(100,'\n');
 
         if(choice == 0){
-            chatOut();
+            out();
         }
 
         if(choice == 1){
@@ -596,9 +597,9 @@ void changeStatus(){
     cout << "***상태메세지 수정하기***" << endl;
     cout << "현재 상태메세지 : " << "\t <[ " << Users[me].getStatus() << " ]" << endl;
     cout << "바꿀 상태메세지를 입력해주세요." << endl;
-    char temp[MAX_STATUS_LENGTH+1];
-    scanf("%257s",temp);
-    Users[me].setStatus((string)temp);
+    string temp;
+    getline(cin,temp);
+    Users[me].setStatus(temp);
     cout << "바뀐 상태메세지 : " << "\t <[ " << Users[me].getStatus() << " ]" << endl;
     upload();
     return;
