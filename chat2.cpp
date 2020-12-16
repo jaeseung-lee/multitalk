@@ -330,9 +330,9 @@ void chatList() {
         chatIn();
         //메뉴 출력
         int number;
-        cout << "-1. exit" << endl;
-        cout << "0. back" << endl;
-        cout << "1. Make new Chat room" << endl;
+        cout << "-1. 종료" << endl;
+        cout << "0. 메인메뉴" << endl;
+        cout << "1. 채팅방 생성" << endl;
 
         int count = 2;
 
@@ -402,14 +402,14 @@ void chatting(ChatRoom room) {
         // 받은사람이 나, 보낸사람이 상대방
         if ((Chats[j].getReceive() == other) &&
             (Chats[j].getSend() == Users[me].getName())) {
-            cout << Chats[j].getTime() << " >> " << Chats[j].getChatting()
-                 << endl;
+            cout << Chats[j].getTime() << " [ " << Users[me].getName() << " ] "
+                 << Chats[j].getChatting() << endl;
         }
         // 받은사람이 상대방, 보낸사람이 나
         if ((Chats[j].getReceive() == Users[me].getName()) &&
             (Chats[j].getSend() == other)) {
-            cout << Chats[j].getTime() << " << " << Chats[j].getChatting()
-                 << endl;
+            cout << Chats[j].getTime() << " [ " << other << " ] "
+                 << Chats[j].getChatting() << endl;
         }
     }
 
@@ -517,18 +517,22 @@ void signUp() {
     string pw = "";
 
     while (1) {
-        cout << "ID (input) : ";
+        cout << "ID (startMenu : q) : ";
         getline(cin, id);
+        if (id == "q") {
+            startMenu();
+            return;
+        }
         // 회원가입시 동일한 아이디가 있는지 확인
         int i;
         for (i = 0; i < Users.size(); i++) {
             if (Users[i].getName() == id) {
                 cout << endl;
-                cout << "+-----------WARNING----------+" << endl;
+                cout << "+---------------WARNING--------------+" << endl;
                 cout << endl;
-                cout << "  동일한 아이디가 존재합니다." << endl;
+                cout << "       동일한 아이디가 존재합니다." << endl;
                 cout << endl;
-                cout << "+----------------------------+" << endl;
+                cout << "+------------------------------------+" << endl;
                 cout << endl;
                 break;
             }
@@ -550,13 +554,13 @@ void signUp() {
 
 void signIn() {
     system("clear");
-    download();
-
     cout << "+====================================+" << endl;
     cout << "                Login                 " << endl;
     cout << "+====================================+" << endl;
     cout << endl;
+    download();
     int tmp = 0;
+
     string id1 = "";
     string pw1 = "";
 
@@ -566,8 +570,12 @@ void signIn() {
     while (tmp == 0) {
         string id2 = "";
         string pw2 = "";
-        cout << "ID : ";
+        cout << "ID (startMenu : q): ";
         getline(cin, id2);
+        if (id2 == "q") {
+            startMenu();
+            return;
+        }
         cout << "PW : ";
         getline(cin, pw2);
 
@@ -586,11 +594,11 @@ void signIn() {
 
         if (tmp == 0) {
             cout << endl;
-            cout << "+--------------WARNING--------------+" << endl;
+            cout << "+--------------WARNING---------------+" << endl;
             cout << endl;
-            cout << "   ID 혹은 PW 가 정확하지 않습니다!" << endl;
+            cout << "    ID 혹은 PW 가 정확하지 않습니다!" << endl;
             cout << endl;
-            cout << "+-----------------------------------+" << endl;
+            cout << "+------------------------------------+" << endl;
             cout << endl;
         }
     }
@@ -612,6 +620,7 @@ void startMenu() {
         cout << endl;
         cout << "채팅 프로그램에 오신 것을 환영합니다." << endl;
         cout << endl;
+        cout << "0. 종료" << endl;
         cout << "1. 로그인" << endl;
         cout << "2. 회원가입" << endl;
         cout << endl;
@@ -620,6 +629,10 @@ void startMenu() {
         cout << "Input: ";
         cin >> choice;
         cin.ignore(100, '\n');
+        if (choice == 0) {
+            out();
+            return;
+        }
         if (choice == 1) {
             signIn();
             return;
@@ -675,7 +688,7 @@ void mainMenu() {
 void seeStatus() {
     system("clear");
     cout << "+====================================+" << endl;
-    cout << "            Status Message            " << endl;
+    cout << "              상태메세지               " << endl;
     cout << "+====================================+" << endl;
     cout << endl;
     download();
@@ -683,7 +696,7 @@ void seeStatus() {
     for (it = Users.begin(); it != Users.end(); it++) {
         cout << (*it).getName();
         cout << "\t <[ " << (*it).getStatus() << " ]" << endl;
-        cout << "---------------------------------" << endl;
+        cout << "--------------------------------------" << endl;
     }
     return;
 }
